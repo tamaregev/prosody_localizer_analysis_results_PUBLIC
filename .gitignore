@@ -1,3 +1,12 @@
 *.asv
 *.m~
 .DS_Store
+
+# Local large artifact (do not commit)
+Gerber_toolbox/ecog_fmri_visualization_matlab/core.17227
+
+# Local large artifact (do not commit)
+Gerber_toolbox/ecog_fmri_visualization_matlab/core.*
+
+# Large local artifacts
+Gerber_toolbox/ecog_fmri_visualization_matlab/core.*
