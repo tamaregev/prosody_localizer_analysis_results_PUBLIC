@@ -123,7 +123,7 @@ folder = [parcels_dir filesep tag];
 filename = 'spm_ss_mROI_data.csv';
 T = readtable([folder filesep filename]);
 
-condition_names = {'SP+','SP-','NP+','NP-','CP+','CP-'};
+condition_names = {'SP+','SP-','NP+','NP-','InvP+','InvP-'};
 
 %% Average all
 whichROIs = selected;%should match T
@@ -563,7 +563,7 @@ for i=1:length(ROIs)
 
     Ttemp = T_selected(ismember(T_selected.ROI,ROIs{i}) & (strcmp(T_selected.Effect,{'A'}) | strcmp(T_selected.Effect,{'B'})) ,:);
     lme{i} = fitlme(Ttemp,formula);
-    TAB{i} = lme2table(lme{i});writetable(TAB{i},[results_dir filesep 'stats' filesep 'RegionsProsody_EffectsProsody' filesep 'LME_AB_' labels{i} '.csv'])
+    TAB{i} = lme2table(lme{i},'satterthwaite');writetable(TAB{i},[results_dir filesep 'stats' filesep 'RegionsProsody_EffectsProsody' filesep 'LME_AB_' labels{i} '.csv'])
     Tstats(ind:ind+1,4:11) = TAB{i}(1:2,1:8);
     
     disp([labels{i} ' ' num2str(lme{i}.Coefficients.pValue(2))])
@@ -574,7 +574,7 @@ end
 % across all ROIs
 Ttemp = T_selected(ismember(T_selected.ROI,AllROIs) & (strcmp(T_selected.Effect,{'A'}) | strcmp(T_selected.Effect,{'B'})) ,:);
 lmeAllROIs{1} = fitlme(Ttemp,formula);
-lme_Tab = lme2table(lmeAllROIs{1});
+lme_Tab = lme2table(lmeAllROIs{1},'satterthwaite');
 writetable(lme_Tab,[results_dir filesep 'stats' filesep 'RegionsProsody_EffectsProsody' filesep 'LME_AB_AllRegions.csv'])
   
 
@@ -592,7 +592,7 @@ for i=1:length(ROIs)
 
     Ttemp = T_selected(ismember(T_selected.ROI,ROIs{i}) & (strcmp(T_selected.Effect,{'C'}) | strcmp(T_selected.Effect,{'D'})) ,:);
     lme{i} = fitlme(Ttemp,formula);
-    TCD{i} = lme2table(lme{i});writetable(TCD{i},[results_dir filesep 'stats'  filesep 'RegionsProsody_EffectsProsody' filesep  'LME_CD_' labels{i} '.csv'])
+    TCD{i} = lme2table(lme{i},'satterthwaite');writetable(TCD{i},[results_dir filesep 'stats'  filesep 'RegionsProsody_EffectsProsody' filesep  'LME_CD_' labels{i} '.csv'])
     Tstats(ind:ind+1,4:11) = TCD{i}(1:2,1:8);
 
     disp([labels{i} ' ' num2str(lme{i}.Coefficients.pValue(2))])
@@ -602,7 +602,7 @@ end
 % across all ROIs
 Ttemp = T_selected(ismember(T_selected.ROI,AllROIs) & (strcmp(T_selected.Effect,{'C'}) | strcmp(T_selected.Effect,{'D'})) ,:);
 lmeAllROIs{2} = fitlme(Ttemp,formula);
-lme_Tab = lme2table(lmeAllROIs{2});
+lme_Tab = lme2table(lmeAllROIs{2},'satterthwaite');
 writetable(lme_Tab,[results_dir filesep 'stats' filesep 'RegionsProsody_EffectsProsody' filesep 'LME_CD_AllRegions.csv'])
   
 %E>F
@@ -617,7 +617,7 @@ for i=1:length(ROIs)
 
     Ttemp = T_selected(ismember(T_selected.ROI,ROIs{i}) & (strcmp(T_selected.Effect,{'E'}) | strcmp(T_selected.Effect,{'F'})) ,:);
     lme{i} = fitlme(Ttemp,formula);
-    TEF{i} = lme2table(lme{i});
+    TEF{i} = lme2table(lme{i},'satterthwaite');
     writetable(TEF{i},[results_dir filesep 'stats' filesep 'RegionsProsody_EffectsProsody' filesep 'LME_EF_' labels{i} '.csv'])
     Tstats(ind:ind+1,4:11) = TEF{i}(1:2,1:8);
 
@@ -629,17 +629,25 @@ end
 % across all ROIs
 Ttemp = T_selected(ismember(T_selected.ROI,AllROIs) & (strcmp(T_selected.Effect,{'E'}) | strcmp(T_selected.Effect,{'F'})) ,:);
 lmeAllROIs{3} = fitlme(Ttemp,formula);
-lme_Tab = lme2table(lmeAllROIs{3});
+lme_Tab = lme2table(lmeAllROIs{3},'satterthwaite');
 writetable(lme_Tab,[results_dir filesep 'stats' filesep 'RegionsProsody_EffectsProsody' filesep 'LME_EF_AllRegions.csv'])
     
-writetable(Tstats,[results_dir filesep 'stats' filesep 'LME_ProsodyEffectAll.csv'])
+%writetable(Tstats,[results_dir filesep 'stats' filesep 'LME_ProsodyEffectAll.csv'])
 
 %% test intelligibility : A>C, B>D per hemi, lobe
 
-Tstats = table(cell(12,1), cell(12,1), cell(12,1), cell(12,1), ...
-               nan(12,1), nan(12,1), nan(12,1), nan(12,1), nan(12,1), nan(12,1), nan(12,1), ...
-               'VariableNames', {'Effects', 'Hemisphere', 'Lobe', 'Name', 'Estimate', 'SE', ...
-                                 'tStat', 'DF', 'pValue', 'Lower', 'Upper'});
+outDir = [results_dir filesep 'stats' filesep 'RegionsProsody_EffectsIntelligibility'];   
+if ~exist(outDir, 'dir'), mkdir(outDir); end                                               
+
+% Tstats = table(cell(12,1), cell(12,1), cell(12,1), cell(12,1), ...
+%                nan(12,1), nan(12,1), nan(12,1), nan(12,1), nan(12,1), nan(12,1), nan(12,1), ...
+%                'VariableNames', {'Effects', 'Hemisphere', 'Lobe', 'Name', 'Estimate', 'SE', ...
+%                                  'tStat', 'DF', 'pValue', 'Lower', 'Upper'});
+Tstats = table(cell(24,1), cell(24,1), cell(24,1), cell(24,1), ...                          % CHANGED: 12 -> 24
+               nan(24,1), nan(24,1), nan(24,1), nan(24,1), nan(24,1), nan(24,1), nan(24,1), ...
+'VariableNames', {'Effects', 'Hemisphere', 'Lobe', 'Name', 'Estimate', 'SE', ...
+'tStat', 'DF', 'pValue', 'Lower', 'Upper'});
+
 ind = 1;
 
 % A>C
@@ -656,9 +664,11 @@ for i=1:length(ROIs)
 
     Ttemp = T_selected(ismember(T_selected.ROI,ROIs{i}) & (strcmp(T_selected.Effect,{'A'}) | strcmp(T_selected.Effect,{'C'})) ,:);
     lme{i} = fitlme(Ttemp,formula);
-    TAC{i} = lme2table(lme{i});writetable(TAC{i},[results_dir filesep 'stats' filesep 'LME_AC_' labels{i} '.csv'])
+    TAC{i} = lme2table(lme{i},'satterthwaite');writetable(TAC{i},[results_dir filesep 'stats' filesep 'LME_AC_' labels{i} '.csv'])
     
-    disp([labels{i} ' ' num2str(lme{i}.Coefficients.pValue(2))])
+    writetable(TAC{i},[outDir filesep 'LME_AC_' labels{i} '.csv'])           % CHANGED: folder
+
+    disp([labels{i} ' ' num2str(TAC{i}.pValue(2))])                          % CHANGED: Satterthwaite p
 
     Tstats(ind:ind+1,4:11) = TAC{i}(1:2,1:8);
     ind = ind + 2;
@@ -667,6 +677,8 @@ end
 % across all ROIs
 Ttemp = T_selected(ismember(T_selected.ROI,AllROIs) & (strcmp(T_selected.Effect,{'A'}) | strcmp(T_selected.Effect,{'C'})) ,:);
 lmeAllROIs_intel{1} = fitlme(Ttemp,formula);
+lme_Tab = lme2table(lmeAllROIs_intel{1},'satterthwaite');                     % NEW
+writetable(lme_Tab,[outDir filesep 'LME_AC_AllRegions.csv'])                  % NEW
 
 %B>D
 Tstats.Effects{ind} = 'B vs. D';
@@ -680,9 +692,9 @@ for i=1:length(ROIs)
 
     Ttemp = T_selected(ismember(T_selected.ROI,ROIs{i}) & (strcmp(T_selected.Effect,{'B'}) | strcmp(T_selected.Effect,{'D'})) ,:);
     lme{i} = fitlme(Ttemp,formula);
-    TBD{i} = lme2table(lme{i});writetable(TBD{i},[results_dir filesep 'stats' filesep 'LME_BD_' labels{i} '.csv'])
-
-    disp([labels{i} ' ' num2str(lme{i}.Coefficients.pValue(2))])
+    TBD{i} = lme2table(lme{i},'satterthwaite');writetable(TBD{i},[results_dir filesep 'stats' filesep 'LME_BD_' labels{i} '.csv'])
+    writetable(TBD{i},[outDir filesep 'LME_BD_' labels{i} '.csv'])           % CHANGED: folder
+    disp([labels{i} ' ' num2str(TBD{i}.pValue(2))])                          % CHANGED: Satterthwaite p
      
     Tstats(ind:ind+1,4:11) = TBD{i}(1:2,1:8);
     ind = ind + 2;
@@ -690,8 +702,9 @@ end
 % across all ROIs
 Ttemp = T_selected(ismember(T_selected.ROI,AllROIs) & (strcmp(T_selected.Effect,{'B'}) | strcmp(T_selected.Effect,{'D'})) ,:);
 lmeAllROIs_intel{2} = fitlme(Ttemp,formula);
-
-writetable(Tstats,[results_dir filesep 'stats' filesep 'LME_IntelligibilityEffectAll.csv'])
+lme_Tab = lme2table(lmeAllROIs_intel{2},'satterthwaite');                     % NEW
+writetable(lme_Tab,[outDir filesep 'LME_BD_AllRegions.csv'])                  % NEW
+%writetable(Tstats,[results_dir filesep 'stats' filesep 'LME_IntelligibilityEffectAll.csv'])
 
 %% test interaction
 
